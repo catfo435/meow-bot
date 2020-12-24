@@ -2,23 +2,38 @@ import discord
 from discord.ext import commands
 import random
 import time
+import asyncpg
+from datetime import datetime,timedelta
+import re
+import pytz
+import ssl
 import asyncio
 import bs4
 import lxml
 import requests
+import os
 
 intents = discord.Intents.default()
 intents.members = True
+intents.guilds = True
 
-bot = commands.Bot(command_prefix=';',help_command = None, intents = intents,activity = game)
+async def get_pre(bot,message):
+	async with bot.pool.acquire() as conn:
+		async with conn.transaction():
+			prefix = await conn.fetch('SELECT prefix FROM prefix WHERE guild=$1',message.guild.id)
+			if not prefix[0]['prefix']:
+				return ';'
+			return prefix[0]['prefix']
+
 game = discord.Game('with Cute Cats 😸')
+bot = commands.Bot(command_prefix=get_pre,help_command = None, intents = intents,activity = game)
 
+TOKEN = 'NzcyNDE0NDg2MTMyMDMxNDg5.X56VDA.F3VBV5qfKohHzL22gOIJeo2CSW0'
+UTC = pytz.utc
 
-TOKEN = 'NzcyNDE0NDg2MTMyMDMxNDg5.X56VDA.huM6xIgjmiIuPUDd_bMl1XAEqMA'
-
-def is_me():
+def is_admin():
     def predicate(ctx):
-        return ctx.message.author.id == 698200925311074485
+        return ctx.message.author.guild_permissions.administrator
     return commands.check(predicate)
 
 def subcmdchk(ctx):
@@ -29,61 +44,180 @@ async def on_ready():
 	print('ONLINE.')
 
 @bot.event
-async def on_member_join(member:discord.Member):
-	channel = bot.get_channel(773083640669274142)
-	embed =  discord.Embed(description = f"Dont listen to <@{155149108183695360}>, he's boring.\nDo whatever you want, this is a chill server.\n<@{member.id}>",
-							color  = discord.Color.dark_theme())
-	await channel.send(embed = embed)
+async def on_member_remove(member:discord.Member):
+	if member.bot:
+		return
+	async with bot.pool.acquire() as conn:
+		async with conn.transaction():
+			await conn.execute('DELETE FROM userafk WHERE id = $1 AND guild = $2',member.id,member.guild.id)
 
 @bot.event
-async def on_member_remove(member:discord.Member):
-	channel = bot.get_channel(770569301278851076)
-	await channel.send(f'{member.name} left! MEOW...')
+async def on_guild_join(guild:discord.Guild):
+	async with bot.pool.acquire() as conn:
+		async with conn.transaction():
+			await conn.execute('INSERT INTO prefix(guild) VALUES($1)',guild.id)
+
+@bot.event
+async def on_guild_remove(guild:discord.Guild):
+	async with bot.pool.acquire() as conn:
+		async with conn.transaction():
+			await conn.execute('DELETE FROM prefix WHERE guild=$1',guild.id)
 
 @bot.event
 async def on_command_error(ctx,error):
 	if isinstance(error, commands.CommandNotFound):
 		await ctx.send(f"{ctx.author.mention} Uh.. That command doesn't exist.\nType **;help** for help on Meow Bot's commands.")
+	if isinstance(error,commands.CommandOnCooldown):
+		await ctx.send(f"{ctx.author.mention} wait for {error.retry_after:.2f} seconds")
 
 @bot.event
 async def on_message(message):
-	if message.author != bot.user:
+	global UTC
+	if message.author == bot.user:
+		return
+		
+	async with bot.pool.acquire() as conn:
+		async with conn.transaction():
+				afk = await conn.fetchval('SELECT afk FROM userafk WHERE id = $1 AND guild = $2',message.author.id,message.guild.id)
+				afkall = await conn.fetch('SELECT id,reason,time FROM userafk WHERE afk = true AND guild = $1',message.guild.id)
 
-		msg = ''
-		msg = ''.join(letter for letter in message.content.split())
+				if not afk:
+					pass
+				if afk:
+					embed = discord.Embed(title = 'AFK Removed', description = f"Welcome back {message.author.mention}!",color = discord.Color.green())
+					await message.channel.send(embed = embed)
+					await conn.execute('UPDATE userafk SET afk = false,reason = NULL,time = NULL WHERE id = $1 AND guild = $2',message.author.id,message.guild.id)
+					return
 
-		if 'rohit' in msg.lower() and not message.author.bot:
-			if message.author.id == 698200925311074485:
-				await message.channel.send('Hyper..., Please call him SELGK, will you?')
-			elif message.author.id == 719906610151030795:
-				await message.channel.send("Why my lord, WHY! Why call yourself rohit!!! PLease dont do this. A GREAT EMPEROR as you has to be called... **SELGK!**")
-			else:
-				responses = ['FOOL!, REFER TO HIM AS **SELGK**, UNDERSTOOD?',
-			              	'MORON!, HE IS **SELGK**, HOW DARE YOU ADDRESS HIM WITHOUT HIS TITLE',
-			              	'GIVE RESPECT RASCAL, CALL HIM **SELGK**']
-				await message.channel.send(f'{message.author.mention} {random.choice(responses)}')
+				for record in afkall:
+					user = message.guild.get_member(record['id'])
+					if user.mentioned_in(message):
 
-		if '<@!772414486132031489>' in message.content or '<@772414486132031489>' in message.content:
-			if 'hello' in message.content.lower() and 'hello' in message.content.lower():
-				await message.channel.send(f"Hey there! {message.author.mention}")
+						time = datetime.now(UTC) - record['time']
+						days = f'{time.days} days' if time.days != 0 else ''
+						time = time.seconds
+						time = time % (24 * 3600)
+						hours = f'{time // 3600} hours' if time // 3600 != 0 else ''
+						time %= 3600
+						minutes = f'{time // 60} minutes' if time // 60 != 0 else ''
+						time %= 60
+						seconds = f'{time} seconds'
+						
+						embed = discord.Embed(title = 'AFK ping', description = f'*{user.display_name}* is afk for **{days} {hours} {minutes} {seconds}**.\nReason: {record["reason"]}',color = discord.Color.orange())
+						await message.channel.send(embed = embed)
 
-			elif 'bye' in message.content.lower():
-				await message.channel.send(f"Going?, Ok bye!\n{message.author.mention}")
+	if bot.user.mention in message.content:
+		if 'hello' in message.content.lower():
+			await message.channel.send(f"Hey there! {message.author.mention}")
 
-			elif'<@!772414486132031489>' == message.content or '<@772414486132031489>' == message.content:
-				await message.channel.send(f"Meow Bot, at your service.\n{message.author.mention}")
+		elif 'bye' in message.content.lower():
+			await message.channel.send(f"Going?, Ok bye!\n{message.author.mention}")
+
+		elif bot.user.mention == message.content:
+			await message.channel.send(f"Meow Bot, at your service.\n{message.author.mention}")
 
 	await bot.process_commands(message)
-
 
 class Utility(commands.Cog):
 	'''THE UTILITY COMMANDS OF THIS BOT'''
 
 	@commands.command()
+	async def info(self,ctx):
+		'''Get to know about the bot'''
+		embed = discord.Embed(title="Meow Bot",color=ctx.me.color)
+		embed.set_thumbnail(url=bot.user.avatar_url)
+		embed.add_field(name='Joined Discord on',value=ctx.me.created_at.date(),inline=False)
+		embed.add_field(name=f'Joined {ctx.guild.name} on',value=ctx.me.joined_at.date(),inline=False)
+		await ctx.send(embed=embed)
+
+	@commands.command()
 	async def ping(self,ctx):
 		'''Gives the ping of meow bot'''
-		await ctx.send(f'Ping is *{bot.latency * 1000 }* ms')
+		await ctx.send(f"Cats don't care about pings actually\nFor the dogs, the ping is *{round(bot.latency * 1000)}* ms")
 
+	@commands.command()
+	async def afk(self,ctx,*,args = None):
+		'''Set your afk'''
+		global UTC
+		async with bot.pool.acquire() as conn:
+
+			async with conn.transaction():
+				accstate = await conn.fetchval('SELECT * FROM userafk WHERE id=$1 AND guild =$2',ctx.author.id,ctx.guild.id)
+
+				if not accstate:
+					await conn.execute('INSERT INTO userafk(id,guild,afk) VALUES($1,$2,false)',ctx.author.id,ctx.guild.id)
+				else:
+					pass
+
+				await conn.execute('UPDATE userafk SET afk = true,reason = $1,time = $2 WHERE id = $3 AND guild = $4',args,datetime.now(UTC),ctx.author.id,ctx.guild.id)
+				embed = discord.Embed(title = 'AFK Set', description = f'Your afk has been set: {args}',color = discord.Color.red())
+				embed.set_footer(text='To avoid pings,set your status to DND.',icon_url="https://cdn.discordapp.com/embed/avatars/4.png")
+				await ctx.send(embed = embed)
+
+	@commands.command()
+	async def announce(self,ctx,channel:discord.TextChannel,*,args):
+		'''Sends an embed with given text in the given channel'''
+
+		embed = discord.Embed(title='ANNOUNCEMENT',description=args,color=discord.Color.red())
+		announcement = await channel.send(embed = embed)
+		await ctx.send(f'Announced in {channel.name}\n{announcement.jump_url}')
+	
+	@commands.command(aliases=['av','pfp'])
+	async def avatar(self,ctx,user:discord.User = None):
+		'''Get the pfp of yourself or someone else's'''
+		embed = discord.Embed()
+		embed.set_image(url=user.avatar_url if user else ctx.author.avatar_url)
+		await ctx.send(embed = embed)
+	
+	@commands.command()
+	async def remind(self,ctx,time,*,args=None):
+		'''Use this to remind yourself abt smth
+		   The time argument supports all types of time:
+		   1.1week 10days
+		   2.1w 10d
+		   3.1WEEK 10DAYS
+		   
+		   If the time has more than one keyword like 10min 20sec, then put it in quotes
+		   But donot give space between the value and word'''
+		async def convert(time):
+
+			if 'month' in time.lower():
+				return None
+
+			ref = {'s':'seconds', 'm':'minutes', 'h':'hours', 'd':'days', 'w':'weeks'}
+			return int(timedelta(**{
+			ref.get(m.group('unit').lower(), 'seconds'): int(m.group('val'))
+			for m in re.finditer(r'(?P<val>\d+)(?P<unit>[smhdw]?)', time, flags=re.I)
+			}).total_seconds())
+		
+		time_seconds = await convert(time)
+
+		if not time_seconds:
+			await ctx.send('Invalid Entry')
+			return
+
+		desc = f'to {args} in {time}' if args else f'in {time}'
+		embed = discord.Embed(title='Remind',description=f'Ok {ctx.author.mention}, I will remind you {desc}',color = discord.Color.green())
+		await ctx.send(embed=embed)
+		await asyncio.sleep(time_seconds)
+		embed = discord.Embed(title='Reminder!',description=args,color=discord.Color.orange())
+		await ctx.send(ctx.author.mention)
+		await ctx.send(embed=embed)
+	
+	@commands.command()
+	@is_admin()
+	@commands.cooldown(1,86400,commands.BucketType.guild)
+	async def setprefix(self,ctx,prefix):
+		'''Sets the prefix for the bot(only for current guild)
+			Needs Administrator Perms'''
+		if len(prefix) > 1:
+			await ctx.send('More than one character not allowed')
+			return
+		
+		async with bot.pool.acquire() as conn:
+			async with conn.transaction():
+				await conn.execute('UPDATE prefix SET prefix=$1 WHERE guild=$2',prefix,ctx.guild.id)
+				await ctx.send(f'{ctx.author.mention}, prefix is set to {prefix}')	
 
 class Fun(commands.Cog):
 	'''Have fun with these commands'''
@@ -96,8 +230,9 @@ class Fun(commands.Cog):
 	@commands.command()
 	async def guessnum(self,ctx):
 		'''Guess a number between 1 to 10'''
+
 		await ctx.send(f"{ctx.author.mention}, guess a number between 1 to 10. (You have 10 seconds to answer and `2 attempts` and a `hint`.)"
-						"type 'hint to know how high and low is the number"
+						"type 'hint to know how high or low is the number"
 					  "\nType 'quit' to quit game")
 		num = random.randint(1,10)
 		hints = 1
@@ -109,11 +244,13 @@ class Fun(commands.Cog):
 		while attempts < 3:
 			try:
 				await ctx.send(f"Guess the number, you have `{3-attempts}` attempts left and `{hints}` hints to use")
-				response = await self.bot.wait_for('message',timeout = 10,check = response_chk)
+				response = await bot.wait_for('message',timeout = 10,check = response_chk)
+
 				if response.content.lower() == 'quit':
-					await ctx.send(f"Got scared that you'll lose huh?"
+					await ctx.send(f"Got scared that you'll lose huh?\n"
 									f"\nBtw, the number was {num}\n{ctx.author.mention}")
 					return
+
 				elif response.content.lower() == 'hint' and hints:
 					hints = 0
 					attempts -= 1
@@ -128,7 +265,8 @@ class Fun(commands.Cog):
 							await ctx.send(f"The number is lower than {random.randint(num+1,10)}")
 						else:
 							await ctx.send(f"The number is higher than {random.randint(1,num-1)}")
-				elif int(response.content) in range(1,10):
+
+				elif int(response.content) in range(1,11):
 					if int(response.content) == num:
 						await ctx.send(f"You win!\n{ctx.author.mention}")
 						await ctx.send(f":confetti_ball:")
@@ -137,187 +275,122 @@ class Fun(commands.Cog):
 						pass
 					else:
 						await ctx.send(f"Wrong bro!, Try again!\n{ctx.author.mention}")
-			except asyncio.exceptions.TimeoutError:
-				await ctx.send(f'{ctx.author.mention} You didnot guess in time.\nBtw, the number was {num}')
-				return
-			except ValueError:
-				await ctx.send(f"Invalid Response {ctx.author.mention}")
+
+				else:
+					await ctx.send('Response not in range 1 to 10')
+					attempts -= 1
+
+			except Exception as err:
+				if isinstance(err,ValueError):
+					await ctx.send("Invalid Response")
+					attempts -= 1
+				else:
+					await ctx.send("Time's Up!")
+					return
 
 			attempts += 1
 		await ctx.send(f'{ctx.author.mention} You ran out of attempts.\nThe number was `{num}`')
+	
 
-	@commands.command()
+	@commands.command(aliases=['mew','cat'])
+	@commands.cooldown(1,5,commands.BucketType.member)
 	async def meow(self,ctx):
 		'''A random image of a cat'''
-		rand = random.randint(1,1500)
-		res = requests.get(f"http://random.cat/view/{rand}")
+
+		#The Cat API
+
+		res = requests.get('https://api.thecatapi.com/v1/images/search?size=small&mime_types=png,jpg&api_key=63b9a514-aad1-40fd-bb8c-d50b5ed28db3')
 		soup = bs4.BeautifulSoup(res.text,"lxml")
+		soup = soup.p.text
+
+		imglist = eval(soup)
+		imgurl = imglist[0]['url']
 
 		meow  = discord.Embed(description = "Meowww...",color = discord.Color.teal())
-		meow.set_image(url = soup.select('#cat')[0]['src'])
+		meow.set_image(url = imgurl)
+		meow.set_footer(text = "Powered by The Cat API | https://thecatapi.com",icon_url='https://cdn2.thecatapi.com/logos/thecatapi_256xW.png')
 		await ctx.send(embed = meow)
+
+	@commands.command(aliases=['doggo','dog'])
+	@commands.cooldown(1,5,commands.BucketType.member)
+	async def woof(self,ctx):
+		'''A random image of a dog'''
+
+		#The Dog API
+
+		res = requests.get('https://api.thedogapi.com/v1/images/search?size=small&mime_types=png,jpg&api_key=f118c7ee-c9fe-4fb6-8836-d2487e3b0f28-d50b5ed28db3')
+		soup = bs4.BeautifulSoup(res.text,"lxml")
+		soup = soup.p.text
+
+		imglist = eval(soup)
+		imgurl = imglist[0]['url']
+
+		woof  = discord.Embed(description = "Woof!",color = discord.Color.gold())
+		woof.set_image(url = imgurl)
+		woof.set_footer(text = "Powered by The Dog API | https://thedogapi.com",icon_url='https://cdn2.thedogapi.com/logos/wave-square_256.png')
+		await ctx.send(embed = woof)
 
 	@commands.command()
 	async def simon(self,ctx,*,arg = None):
-
-		if arg == None:
+		'''Simon says what u say'''
+		if not arg:
 			await ctx.send(f"{ctx.author.mention}, Type a message for simon to say, duh.")
 			return
 		await ctx.send(f"Simon says {arg}")
 
-	@commands.command()
-	async def adminisafool(self,ctx):
-
-		message = "this server's founder is a fool. Imposes thousand rules as if this is a official game server. I think he never heard the words *chill server*"
-		await ctx.invoke(self.bot.get_command('simon'),arg = message)
-
-
-class Election(commands.Cog):
-	
-	def __init__(self):
-		self.link = discord.Embed(title = 'US Election',url ="https://www.theguardian.com/us-news/ng-interactive/2020/nov/05/us-election-2020-live-results-donald-trump-joe-biden-presidential-votes-arizona-nevada-pennsylvania-georgia", 
-				            description="Results of US Election 2020",color = 0x008000)
-		self.link.set_image(url='https://i.guim.co.uk/img/media/5a04c4d1d6d43bac9a2007f4bd0827e59ae08390/0_0_2000_1200/master/2000.jpg?width=1200&height=630&quality=85&auto=format&fit=crop&overlay-align=bottom%2Cleft&overlay-width=100p&overlay-base64=L2ltZy9zdGF0aWMvb3ZlcmxheXMvdGctZGVmYXVsdC5wbmc&enable=upscale&s=60bb2ecf9357d10003bf9ecfed6699b0')	
-
-	@commands.group()
-	async def uselection(self,ctx):
-		'''The US Election result 2020'''
-		if subcmdchk:
-			return
-		uselec = discord.Embed(description = "Get to know the status of US Presidential Election '20 with the ;uselection p command\n"
-							"Get to know the status of US Senate Election '20 with the ;uselection s command\n"
-							 "Get to know the status of US Presidential Election '20 with the ;uselection p command\n")
-		await ctx.send(embed = uselec)
-
-	@uselection.command()
-	async def p(self,ctx):
-		'''Get to know the US Presidential Election '20 results'''
-
-		res = requests.get('https://www.theguardian.com/us-news/ng-interactive/2020/nov/05/us-election-2020-live-results-donald-trump-joe-biden-presidential-votes-arizona-nevada-pennsylvania-georgia')
-		soup = bs4.BeautifulSoup(res.text,"lxml")
-		
-		biden = int(soup.find_all('div',{"class":"ge-bar__count ge-bar__count--p color--D"})[0].text)
-		trump = int(soup.find_all("div",{"class":"ge-bar__count ge-bar__count--p color--R"})[0].text)
-
-		b_embed = discord.Embed(description="::confetti_ball::Trump has lost the US PRESIDENTIAL Election!!! :confetti_ball:\nAah also Biden won the election",
-			                    color = 0x0000ff )
-		t_embed = discord.Embed(description="Trump has won the US PRESIDENTIAL Election",color = 0xff0000 )
-
-		b_votes = discord.Embed(description=f"Biden(Democratic Party) has **{biden}** electoral votes",color = 0x0000ff )
-		t_votes = discord.Embed(description=f"Trump(Republican Party) has **{trump}** electoral votes ",color = 0xff0000 )
-
-		await ctx.send(embed = b_votes)
-		await ctx.send(embed = t_votes)
-
-		if biden >= 270:
-			await ctx.send(embed = b_embed)
-		elif trump >= 270:
-			await ctx.send(embed = t_embed)
-		else:
-			await ctx.send("**Either Candidate hasn't reached the 270 mark yet**")
-
-		await ctx.send("For more info, refer:")
-		await ctx.send(embed = self.link)
-
-	@uselection.command()
-	async def s(self,ctx):
-		'''Get to know the US Senate Election '20 results'''
-
-		res = requests.get('https://www.theguardian.com/us-news/ng-interactive/2020/nov/05/us-election-2020-live-results-donald-trump-joe-biden-presidential-votes-arizona-nevada-pennsylvania-georgia')
-		soup = bs4.BeautifulSoup(res.text,"lxml")
-		
-		dem = int(soup.find_all('div',{"class":"ge-bar__count ge-bar__count--s color--D"})[0].text)
-		rep = int(soup.find_all("div",{"class":"ge-bar__count ge-bar__count--s color--R"})[0].text)
-
-		d_embed = discord.Embed(description="Democratic Party has won the senate",color = 0x0000ff )
-		r_embed = discord.Embed(description="Republican Party has won the senate",color = 0xff0000 )
-
-		d_votes = discord.Embed(description=f"Democratic Party has **{dem}** senate seats",color = 0x0000ff )
-		r_votes = discord.Embed(description=f"Republican Party has **{rep}** senate seats",color = 0xff0000 )
-
-		await ctx.send(embed = d_votes)
-		await ctx.send(embed = r_votes)
-
-		if dem >= 51:
-			await ctx.send(embed = d_embed)
-		elif rep >= 51:
-			await ctx.send(embed = r_embed)
-		else:
-			await ctx.send("**Either Candidate hasn't reached the 270 mark yet**")
-
-		await ctx.send("For more info, refer:")
-		await ctx.send(embed = self.link)
-
-	@uselection.command()
-	async def h(self,ctx):
-		'''Get to know the US House Election '20 results'''
-
-		res = requests.get('https://www.theguardian.com/us-news/ng-interactive/2020/nov/05/us-election-2020-live-results-donald-trump-joe-biden-presidential-votes-arizona-nevada-pennsylvania-georgia')
-		soup = bs4.BeautifulSoup(res.text,"lxml")
-		
-		dem = int(soup.find_all('div',{"class":"ge-bar__count ge-bar__count--h color--D"})[0].text)
-		rep = int(soup.find_all("div",{"class":"ge-bar__count ge-bar__count--h color--R"})[0].text)
-
-		d_embed = discord.Embed(description="Democratic Party has won the house",
-			                    color = 0x0000ff )
-		r_embed = discord.Embed(description="Republican Party has won the election",color = 0xff0000 )
-
-		d_votes = discord.Embed(description=f"Biden(Democratic Party) has **{dem}** senate seats",color = 0x0000ff )
-		r_votes = discord.Embed(description=f"Trump(Republican Party) has **{rep}** senate seats",color = 0xff0000 )
-
-		await ctx.send(embed = d_votes)
-		await ctx.send(embed = r_votes)
-
-		if dem >= 218:
-			await ctx.send(embed = d_embed)
-		elif rep >= 218:
-			await ctx.send(embed = r_embed)
-		else:
-			await ctx.send("**Either Candidate hasn't reached the 218 mark yet**")
-
-		await ctx.send("For more info, refer:")
-		await ctx.send(embed = self.link)
-
-
 class EmbedHelpCommand(commands.HelpCommand):
 
 	COLOUR = discord.Colour.orange()
+	emoji_ref = {'Utility':':tools:','Fun':':partying_face:','Help':':speech_balloon:'}
 
-	def get_ending_note(self):
-		return 'Use {0}{1} [command] for more info on a command.'.format(self.clean_prefix, self.invoked_with)
+	def get_ending_note(self,mode = 0):
+		if not mode:
+			return 'Use {0}{1} [command] for more info on a command.'.format(self.clean_prefix, self.invoked_with)
+		else:
+			return 'Use {0}{1} [category] for more info on the category.'.format(self.clean_prefix, self.invoked_with)
 
 	def get_command_signature(self, command):
 		return '{0.qualified_name} {0.signature}'.format(command)
 
 	async def send_bot_help(self, mapping):
-		embed = discord.Embed(title='Bot Commands', colour=self.COLOUR)
-		description = self.context.bot.description
-		if description:
-			embed.description = description
+		embed = discord.Embed(title='Bot Help', colour=self.COLOUR)
 
-		for cog, commands in mapping.items():
-			name = 'No Category' if cog is None else cog.qualified_name
-			filtered = await self.filter_commands(commands, sort=True)
-			if filtered:
-				value = '\u2002\n'.join(c.name for c in filtered)
-				if cog:
-					value = '{0}\n'.format(value)
+		cog_names = []
+		
+		def cogs():
+			for cog in bot.cogs.items():
+				yield cog[0] #name of cog
 
-				embed.add_field(name=name, value=value)
+		for cog_name in cogs():
+			name = f'{cog_name} {self.emoji_ref[cog_name] or ""}'
 
-		embed.set_footer(text=self.get_ending_note())
+			cog_names.append(name)
+
+		value = ''
+		for i in range(len(cog_names)):
+			if i and i%3==0:
+				value += cog_names[i] + '\n'
+				continue
+
+			value += cog_names[i] + '\u2002'*6	
+		embed.description = value		
+
+		embed.set_footer(text=self.get_ending_note(1))
 		await self.get_destination().send(embed=embed)
 
 	async def send_command_help(self,command):
 		embed = discord.Embed(title=f'{command.qualified_name.capitalize()} Command', colour=self.COLOUR)
 
-		embed.add_field(name=self.get_command_signature(command), value=command.short_doc or '...', inline=False)
+		embed.add_field(name=self.get_command_signature(command), value=command.help or '...', inline=False)
+		aliases = ' , '.join(c for c in command.aliases) if command.aliases else 'None'
+		embed.add_field(name='Aliases', value=aliases,inline=False)
 
 		embed.set_footer(text=self.get_ending_note())
 		await self.get_destination().send(embed=embed)
 
 	async def send_cog_help(self, cog):
-		embed = discord.Embed(title='{0.qualified_name} Commands'.format(cog), colour=self.COLOUR)
+		cog_name = f'{cog.qualified_name} {self.emoji_ref[cog.qualified_name] or ""}'
+		embed = discord.Embed(title=f'{cog_name} Commands', colour=self.COLOUR)
 		if cog.description:
 			embed.description = cog.description
 
@@ -361,14 +434,13 @@ class Help(commands.Cog):
 
 bot.add_cog(Utility())
 bot.add_cog(Fun())
-bot.add_cog(Election())
 bot.add_cog(Help(bot))
 
+cntxt = ssl.create_default_context(cafile='rds-ca-2019-root.pem')
+cntxt.check_hostname = False
+cntxt.verify_mode = ssl.CERT_NONE
 
-@bot.command(hidden = True)
-@is_me()
-async def stop_r12(ctx):
-	await ctx.send('Going offline...')
-	await bot.close()
-
+bot.pool = asyncio.get_event_loop().run_until_complete(asyncpg.create_pool(dsn='postgres://jexgsiqpmrkvmw:722bd32ad843edbf5c88460172a3ca89180814a19b3c42b1d59f7d4c27f09498@ec2-54-160-18-230.compute-1.amazonaws.com:5432/d87jrr3ljgf05h',
+	min_size = 1,max_size=1,ssl = cntxt))
+	
 bot.run(TOKEN)

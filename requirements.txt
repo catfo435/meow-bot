@@ -1,0 +1,6 @@
+git+https://github.com/Rapptz/discord.py
+lxml
+requests
+bs4
+datetime
+asyncpg
