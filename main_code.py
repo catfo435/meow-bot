@@ -342,12 +342,13 @@ class EmbedHelpCommand(commands.HelpCommand):
 
 	COLOUR = discord.Colour.orange()
 	emoji_ref = {'Utility':':tools:','Fun':':partying_face:','Help':':speech_balloon:'}
+	version = os.getenv('SOURCE_VERSION')
 
 	def get_ending_note(self,mode = 0):
 		if not mode:
-			return 'Use {0}{1} [command] for more info on a command.'.format(self.clean_prefix, self.invoked_with)
+			return 'Use {0}{1} [command] for more info on a command | Version: {2}'.format(self.clean_prefix, self.invoked_with, self.version)
 		else:
-			return 'Use {0}{1} [category] for more info on the category.'.format(self.clean_prefix, self.invoked_with)
+			return 'Use {0}{1} [category] for more info on the category | Version: {2}'.format(self.clean_prefix, self.invoked_with, self.version)
 
 	def get_command_signature(self, command):
 		return '{0.qualified_name} {0.signature}'.format(command)
