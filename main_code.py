@@ -441,7 +441,7 @@ cntxt = ssl.create_default_context(cafile='rds-ca-2019-root.pem')
 cntxt.check_hostname = False
 cntxt.verify_mode = ssl.CERT_NONE
 
-bot.pool = asyncio.get_event_loop().run_until_complete(asyncpg.create_pool(dsn='postgres://jexgsiqpmrkvmw:722bd32ad843edbf5c88460172a3ca89180814a19b3c42b1d59f7d4c27f09498@ec2-54-160-18-230.compute-1.amazonaws.com:5432/d87jrr3ljgf05h',
+bot.pool = asyncio.get_event_loop().run_until_complete(asyncpg.create_pool(dsn=os.getenv('DATABASE_URL'),
 	min_size = 1,max_size=1,ssl = cntxt))
 	
 bot.run(TOKEN)
