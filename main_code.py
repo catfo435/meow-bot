@@ -342,7 +342,7 @@ class EmbedHelpCommand(commands.HelpCommand):
 
 	COLOUR = discord.Colour.orange()
 	emoji_ref = {'Utility':':tools:','Fun':':partying_face:','Help':':speech_balloon:'}
-	version = os.getenv('SOURCE_VERSION')
+	version = os.getenv('VERSION')
 
 	def get_ending_note(self,mode = 0):
 		if not mode:
