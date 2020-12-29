@@ -103,7 +103,7 @@ async def on_message(message):
 						time %= 60
 						seconds = f'{time} seconds'
 						
-						embed = discord.Embed(title = 'AFK ping', description = f'*{user.display_name}* is afk for **{days} {hours} {minutes} {seconds}**.\nReason: {record["reason"]}',color = discord.Color.orange())
+						embed = discord.Embed(title = 'AFK ping', description = f'*{user.display_name}* is afk for**{days} {hours} {minutes} {seconds}**.\nReason: {record["reason"]}',color = discord.Color.orange())
 						await message.channel.send(embed = embed)
 
 	if bot.user.mention in message.content:
