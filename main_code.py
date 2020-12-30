@@ -139,6 +139,8 @@ class Utility(commands.Cog):
 	async def afk(self,ctx,*,args = None):
 		'''Set your afk'''
 		global UTC
+		if len(args) > 500:
+		        await ctx.send(f"{ctx.author.mention}Exceeded Character Limit!")
 		async with bot.pool.acquire() as conn:
 
 			async with conn.transaction():
