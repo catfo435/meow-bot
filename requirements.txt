@@ -4,5 +4,3 @@ requests
 bs4
 datetime
 asyncpg
-PIL
-io
