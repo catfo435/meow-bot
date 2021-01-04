@@ -12,7 +12,7 @@ import bs4
 import lxml
 import requests
 import os
-import Image
+from Pillow import Image
 from io import BytesIO
 
 intents = discord.Intents.default()
