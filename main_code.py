@@ -168,7 +168,7 @@ class Utility(commands.Cog):
 	
 	@commands.command(aliases=['av','pfp'])
 	async def avatar(self,ctx,user:discord.User = None):
-	        '''Get the pfp of yourself or someone else's'''
+		'''Get the pfp of yourself or someone else's'''
 								      
 		def find_dominant_color(res):
 			#Resizing parameters
