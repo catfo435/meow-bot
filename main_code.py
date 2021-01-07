@@ -185,7 +185,7 @@ class Utility(commands.Cog):
 		   But donot give space between the value and word'''
 		async def convert(time):
 
-			if 'month' in time.lower():
+			if 'month' in time.lower() or 'y' in time.lower():
 				return None
 
 			ref = {'s':'seconds', 'm':'minutes', 'h':'hours', 'd':'days', 'w':'weeks'}
