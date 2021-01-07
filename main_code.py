@@ -12,8 +12,6 @@ import bs4
 import lxml
 import requests
 import os
-import Image
-from io import BytesIO
 
 intents = discord.Intents.default()
 intents.members = True
@@ -170,28 +168,7 @@ class Utility(commands.Cog):
 	async def avatar(self,ctx,user:discord.User = None):
 		'''Get the pfp of yourself or someone else's'''
 								      
-		def find_dominant_color(res):
-			#Resizing parameters
-			width, height = 150,150
-			image = Image.open(BytesIO(res.content))
-			image = image.resize((width, height),resample = 0)
-			#Get colors from image object
-			pixels = image.getcolors(width * height)
-			#Sort them by count number(first element of tuple)
-			sorted_pixels = sorted(pixels, key=lambda t: t[0])
-			#Get the most frequent color
-			dominant_color = sorted_pixels[-1][1]
-			return dominant_color
-								      
-		def rgb_to_hex(rgb):
-  			def clamp(x):
-    				return max(0, min(x, 255))
-
-  			return "0x{0:02x}{1:02x}{2:02x}".format(clamp(rgb[0]), clamp(rgb[1]), clamp(rgb[2]))
-								      
-		color = rgb_to_hex(find_dominant_color(requests.get(user.avatar_url if user else ctx.author.avatar_url)))
-								      
-		embed = discord.Embed(title=f"{user.name if user else ctx.author.name}'s pfp",color=eval(color))
+		embed = discord.Embed(title=f"{user.name if user else ctx.author.name}'s pfp",color=user.color if user else ctx.author.color)
 		embed.set_image(url=user.avatar_url if user else ctx.author.avatar_url)
 		embed.set_footer(text = f"Requested by {ctx.author.name}")
 		await ctx.send(embed = embed)
