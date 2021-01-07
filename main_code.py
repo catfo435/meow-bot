@@ -165,7 +165,7 @@ class Utility(commands.Cog):
 		await ctx.send(f'Announced in {channel.name}\n{announcement.jump_url}')
 	
 	@commands.command(aliases=['av','pfp'])
-	async def avatar(self,ctx,user:discord.User = None):
+	async def avatar(self,ctx,user:discord.Member = None):
 		'''Get the pfp of yourself or someone else's'''
 								      
 		embed = discord.Embed(title=f"{user.name if user else ctx.author.name}'s pfp",color=user.color if user else ctx.author.color)
