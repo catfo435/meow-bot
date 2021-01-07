@@ -169,7 +169,7 @@ class Utility(commands.Cog):
 		'''Get the pfp of yourself or someone else's'''
 								      
 		embed = discord.Embed(title=f"{user.name if user else ctx.author.name}'s pfp",color=user.color if user else ctx.author.color)
-		embed.set_image(url=user.avatar_url if user else ctx.author.avatar_url)
+		embed.set_image(url=user.avatar_url + "?size=1024" if user else ctx.author.avatar_url+ "?size=1024")
 		embed.set_footer(text = f"Requested by {ctx.author.name}")
 		await ctx.send(embed = embed)
 	
