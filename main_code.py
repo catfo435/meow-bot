@@ -71,6 +71,8 @@ async def on_command_error(ctx,error):
 		await ctx.send(f"{ctx.author.mention} wait for {error.retry_after:.2f} seconds")
 	if isinstance(error,commands.MemberNotFound):
 		await ctx.send(f"{ctx.author.mention} No member with the given name/id- {error.argument} is found")
+	else:
+		await ctx.send(f"{ctx.author.mention} An Error occured... <@{bot.owner_id}> will be looking into it")
 
 @bot.event
 async def on_message(message):
@@ -173,7 +175,7 @@ class Utility(commands.Cog):
 		if not user:
 			user = ctx.author
 		else:
-			user = MemberConverter(user)
+			user = commands.MemberConverter(user)
 								      
 		embed = discord.Embed(title=f"{user.name}'s pfp",color=user.color)
 		embed.set_image(url=user.avatar_ur)
