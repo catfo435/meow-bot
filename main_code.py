@@ -175,7 +175,7 @@ class Utility(commands.Cog):
 		if not user:
 			user = ctx.author
 		else:
-			user = commands.MemberConverter()
+			user = commands.MemberConverter(ctx)
 								      
 		embed = discord.Embed(title=f"{user.name}'s pfp",color=user.color)
 		embed.set_image(url=user.avatar_ur)
