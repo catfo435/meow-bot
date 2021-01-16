@@ -69,6 +69,8 @@ async def on_command_error(ctx,error):
 		await ctx.send(f"{ctx.author.mention} Uh.. That command doesn't exist.\nType **;help** for help on Meow Bot's commands.")
 	if isinstance(error,commands.CommandOnCooldown):
 		await ctx.send(f"{ctx.author.mention} wait for {error.retry_after:.2f} seconds")
+	if isinstance(error,commands.MemberNotFound):
+		await ctx.send(f"{ctx.author.mention} No member with the given name/id- {error.argument} is found")
 
 @bot.event
 async def on_message(message):
@@ -165,11 +167,16 @@ class Utility(commands.Cog):
 		await ctx.send(f'Announced in {channel.name}\n{announcement.jump_url}')
 	
 	@commands.command(aliases=['av','pfp'])
-	async def avatar(self,ctx,user:discord.Member = None):
+	async def avatar(self,ctx,user = None):
 		'''Get the pfp of yourself or someone else's'''
+		
+		if not user:
+			user = ctx.author
+		else:
+			user = MemberConverter(user)
 								      
-		embed = discord.Embed(title=f"{user.name if user else ctx.author.name}'s pfp",color=user.color if user else ctx.author.color)
-		embed.set_image(url=user.avatar_url if user else ctx.author.avatar_url)
+		embed = discord.Embed(title=f"{user.name}'s pfp",color=user.color)
+		embed.set_image(url=user.avatar_ur)
 		embed.set_footer(text = f"Requested by {ctx.author.name}")
 		await ctx.send(embed = embed)
 	
