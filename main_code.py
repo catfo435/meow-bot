@@ -72,7 +72,7 @@ async def on_command_error(ctx,error):
 	if isinstance(error,commands.MemberNotFound):
 		await ctx.send(f"{ctx.author.mention} No member with the given name/id- {error.argument} is found")
 	else:
-		await ctx.send(f"{ctx.author.mention} An Error occured... <@{bot.owner_id}> will be looking into it")
+		await ctx.send(f"{ctx.author.mention} An Error occured - `{error}`... <@{bot.owner_id}> will be looking into it")
 
 @bot.event
 async def on_message(message):
