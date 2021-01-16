@@ -178,7 +178,7 @@ class Utility(commands.Cog):
 			user = commands.MemberConverter(ctx)
 								      
 		embed = discord.Embed(title=f"{user.name}'s pfp",color=user.color)
-		embed.set_image(url=user.avatar_ur)
+		embed.set_image(url=user.avatar_url)
 		embed.set_footer(text = f"Requested by {ctx.author.name}")
 		await ctx.send(embed = embed)
 	
