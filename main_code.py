@@ -67,9 +67,9 @@ async def on_guild_remove(guild:discord.Guild):
 async def on_command_error(ctx,error):
 	if isinstance(error, commands.CommandNotFound):
 		await ctx.send(f"{ctx.author.mention} Uh.. That command doesn't exist.\nType **;help** for help on Meow Bot's commands.")
-	if isinstance(error,commands.CommandOnCooldown):
+	elif isinstance(error,commands.CommandOnCooldown):
 		await ctx.send(f"{ctx.author.mention} wait for {error.retry_after:.2f} seconds")
-	if isinstance(error,commands.MemberNotFound):
+	elif isinstance(error,commands.MemberNotFound):
 		await ctx.send(f"{ctx.author.mention} No member with the given name/id- {error.argument} is found")
 	else:
 		await ctx.send(f"{ctx.author.mention} An Error occured - `{error}`... <@{bot.owner_id}> will be looking into it")
