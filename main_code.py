@@ -223,7 +223,7 @@ class Utility(commands.Cog):
 	@commands.command()
 	async def senttime(self,ctx,message):
 		msgconv = commands.MessageConverter()
-		message = msgconv.convert(message)
+		message = msgconv.convert(ctx,message)
 		
 		await ctx.send(f"Message was sent at {message.created_at}")						      
 	
