@@ -221,7 +221,7 @@ class Utility(commands.Cog):
 		await ctx.send(embed=embed)
 	
 	@commands.command()
-	async def senttime(message):
+	async def senttime(self,ctx,message):
 		msgconv = commands.MessageConverter()
 		message = msgconv.convert(message)
 		
