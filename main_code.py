@@ -112,7 +112,7 @@ async def on_message(message):
 						embed = discord.Embed(title = 'AFK ping', description = f'*{user.display_name}* is afk for**{days} {hours} {minutes} {seconds}**.\nReason: {record["reason"]}',color = discord.Color.orange())
 						await message.channel.send(embed = embed)
 
-	if bot.user.mentioned_in(message):
+	if bot.user.mentioned_in(message) and not message.mention_everyone:
 		if 'hello' in message.content.lower():
 			await message.channel.send(f"Hey there! {message.author.mention}")
 
