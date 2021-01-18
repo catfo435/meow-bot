@@ -71,6 +71,8 @@ async def on_command_error(ctx,error):
 		await ctx.send(f"{ctx.author.mention} wait for {error.retry_after:.2f} seconds")
 	elif isinstance(error,commands.MemberNotFound):
 		await ctx.send(f"{ctx.author.mention} No member with the given name/id- {error.argument} is found")
+	elif isinstance(error,commands.MessageNotFound):
+		await ctx.send(f"{ctx.author.mention} No message with the given url/id- {error.argument} is found")
 	else:
 		await ctx.send(f"{ctx.author.mention} An Error occured - `{error}`... <@{bot.owner_id}> will be looking into it")
 
@@ -217,6 +219,13 @@ class Utility(commands.Cog):
 		embed = discord.Embed(title='Reminder!',description=args,color=discord.Color.orange())
 		await ctx.send(ctx.author.mention)
 		await ctx.send(embed=embed)
+	
+	@commands.command()
+	async def senttime(message):
+		msgconv = commands.MessageConverter()
+		message = msgconv.convert(message)
+		
+		await ctx.send(f"Message was sent at {message.created_at}")						      
 	
 	@commands.command()
 	@is_admin()
