@@ -113,13 +113,14 @@ async def on_message(message):
 						await message.channel.send(embed = embed)
 
 	if bot.user.mention in message.content:
+		print(message.content)
 		if 'hello' in message.content.lower():
 			await message.channel.send(f"Hey there! {message.author.mention}")
 
 		elif 'bye' in message.content.lower():
 			await message.channel.send(f"Going?, Ok bye!\n{message.author.mention}")
 
-		elif bot.user.mention == message.content:
+		else:
 			await message.channel.send(f"Meow Bot, at your service.\n{message.author.mention}")
 
 	await bot.process_commands(message)
