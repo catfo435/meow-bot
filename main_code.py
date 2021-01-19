@@ -73,8 +73,6 @@ async def on_command_error(ctx,error):
 		await ctx.send(f"{ctx.author.mention} No member with the given name/id- {error.argument} is found")
 	elif isinstance(error,commands.MessageNotFound):
 		await ctx.send(f"{ctx.author.mention} No message with the given url/id- {error.argument} is found")
-	else:
-		await ctx.send(f"{ctx.author.mention} An Error occured - `{error}`... <@{bot.owner_id}> will be looking into it")
 
 @bot.event
 async def on_message(message):
@@ -148,7 +146,7 @@ class Utility(commands.Cog):
 	async def afk(self,ctx,*,args = None):
 		'''Set your afk'''
 		global UTC
-		if len(args) > 500:
+		if len(args) > 100:
 		        await ctx.send(f"{ctx.author.mention}Exceeded Character Limit!")
 		async with bot.pool.acquire() as conn:
 
