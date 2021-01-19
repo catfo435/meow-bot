@@ -227,7 +227,7 @@ class Utility(commands.Cog):
 		msgconv = commands.MessageConverter()
 		message = await msgconv.convert(ctx,message)
 		
-		await ctx.send(f"Message was sent at `{message.created_at.astimezone(IST)}`")						      
+		await message.reply(f"Message was sent at `{message.created_at.astimezone(IST)}`")						      
 	
 	@commands.command()
 	@is_admin()
