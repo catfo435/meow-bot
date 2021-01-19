@@ -74,6 +74,9 @@ async def on_command_error(ctx,error):
 		await ctx.send(f"{ctx.author.mention} No member with the given name/id- {error.argument} is found")
 	elif isinstance(error,commands.MessageNotFound):
 		await ctx.send(f"{ctx.author.mention} No message with the given url/id- {error.argument} is found")
+	elif isinstance(error,commands.BadArgument):
+		await ctx.send(f"{ctx.author.mention} There's something wrong with the data you have sent")
+		
 
 @bot.event
 async def on_message(message):
@@ -227,7 +230,7 @@ class Utility(commands.Cog):
 		msgconv = commands.MessageConverter()
 		message = await msgconv.convert(ctx,message)
 		
-		await message.reply(f"Message was sent at `{message.created_at.astimezone(IST)}`",mention_author=False)						      
+		await message.reply(f"Message was sent at `{message.created_at.astimezone(IST)}`",mention_author=False)
 	
 	@commands.command()
 	@is_admin()
