@@ -119,7 +119,7 @@ async def on_message(message):
 		elif 'bye' in message.content.lower():
 			await message.channel.send(f"Going?, Ok bye!\n{message.author.mention}")
 
-		elif bot.user.mention == message.content:
+		elif len(message.content) == 21:
 			await message.channel.send(f"Meow Bot, at your service.\n{message.author.mention}")
 		else:
 			pass
