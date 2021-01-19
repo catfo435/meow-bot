@@ -30,6 +30,7 @@ bot = commands.Bot(command_prefix=get_pre,help_command = None, intents = intents
 
 TOKEN = 'NzcyNDE0NDg2MTMyMDMxNDg5.X56VDA.F3VBV5qfKohHzL22gOIJeo2CSW0'
 UTC = pytz.utc
+IST = pytz.timezone('Asia/Calcutta')
 
 def is_admin():
     def predicate(ctx):
@@ -226,7 +227,7 @@ class Utility(commands.Cog):
 		msgconv = commands.MessageConverter()
 		message = await msgconv.convert(ctx,message)
 		
-		await ctx.send(f"Message was sent at {message.created_at}")						      
+		await ctx.send(f"Message was sent at `{message.created_at.astimezone(IST)}`")						      
 	
 	@commands.command()
 	@is_admin()
