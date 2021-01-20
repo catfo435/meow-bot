@@ -153,7 +153,6 @@ class Utility(commands.Cog):
 		async with bot.pool.acquire() as conn:
 
 			async with conn.transaction():
-				print('meow')
 				accstate = await conn.fetchval('SELECT * FROM userafk WHERE id=$1 AND guild =$2',ctx.author.id,ctx.guild.id)
 
 				if not accstate:
@@ -161,7 +160,6 @@ class Utility(commands.Cog):
 				else:
 					pass
 
-				print(datetime.now())
 				await conn.execute('UPDATE userafk SET afk = true,reason = $1,time = $2 WHERE id = $3 AND guild = $4',args,datetime.now(UTC),ctx.author.id,ctx.guild.id)
 				embed = discord.Embed(title = 'AFK Set', description = f'Your afk has been set: {args}',color = discord.Color.red())
 				embed.set_footer(text='To avoid pings,set your status to DND.',icon_url="https://cdn.discordapp.com/embed/avatars/4.png")
