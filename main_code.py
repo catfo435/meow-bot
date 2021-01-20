@@ -184,8 +184,7 @@ class Utility(commands.Cog):
 		if not user:
 			user = ctx.author
 		else:
-			Memberconv = commands.MemberConverter()
-			user = await Memberconv.convert(ctx,user)
+			user = await commands.MemberConverter().convert(ctx,user)
 								      
 		embed = discord.Embed(title=f"{user.name}'s pfp",color=user.color)
 		embed.set_image(url=user.avatar_url)
@@ -229,8 +228,7 @@ class Utility(commands.Cog):
 	
 	@commands.command()
 	async def senttime(self,ctx,message):
-		msgconv = commands.MessageConverter()
-		message = await msgconv.convert(ctx,message)
+		message = await commands.MessageConverter().convert(ctx,message)
 		
 		await message.reply(f"Message was sent at `{message.created_at.astimezone(IST)}`",mention_author=False)
 	
