@@ -99,7 +99,7 @@ async def on_message(message):
 
 				for record in afkall:
 					user = message.guild.get_member(record['id'])
-					if user.mentioned_in(message):
+					if user.mentioned_in(message) and not message.mention_everyone:
 
 						time = datetime.now(UTC) - record['time']
 						days = f'{time.days} days' if time.days != 0 else ''
