@@ -94,6 +94,7 @@ async def on_message(message):
 				if afk:
 					embed = discord.Embed(title = 'AFK Removed', description = f"Welcome back {message.author.mention}!",color = discord.Color.green())
 					await message.channel.send(embed = embed)
+					print(datetime.now())
 					await conn.execute('UPDATE userafk SET afk = false,reason = NULL,time = NULL WHERE id = $1 AND guild = $2',message.author.id,message.guild.id)
 					return
 
@@ -162,6 +163,7 @@ class Utility(commands.Cog):
 				else:
 					pass
 
+				print(datetime.now())
 				await conn.execute('UPDATE userafk SET afk = true,reason = $1,time = $2 WHERE id = $3 AND guild = $4',args,datetime.now(UTC),ctx.author.id,ctx.guild.id)
 				embed = discord.Embed(title = 'AFK Set', description = f'Your afk has been set: {args}',color = discord.Color.red())
 				embed.set_footer(text='To avoid pings,set your status to DND.',icon_url="https://cdn.discordapp.com/embed/avatars/4.png")
