@@ -88,13 +88,10 @@ async def on_message(message):
 		async with conn.transaction():
 				afk = await conn.fetchval('SELECT afk FROM userafk WHERE id = $1 AND guild = $2',message.author.id,message.guild.id)
 				afkall = await conn.fetch('SELECT id,reason,time FROM userafk WHERE afk = true AND guild = $1',message.guild.id)
-
-				if not afk:
-					pass
-				if afk:
+				
+				if afk and not message.content.startswith(';afk '):
 					embed = discord.Embed(title = 'AFK Removed', description = f"Welcome back {message.author.mention}!",color = discord.Color.green())
 					await message.channel.send(embed = embed)
-					print(datetime.now())
 					await conn.execute('UPDATE userafk SET afk = false,reason = NULL,time = NULL WHERE id = $1 AND guild = $2',message.author.id,message.guild.id)
 				
 				if afkall and not afk:
