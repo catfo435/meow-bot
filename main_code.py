@@ -96,24 +96,24 @@ async def on_message(message):
 					await message.channel.send(embed = embed)
 					print(datetime.now())
 					await conn.execute('UPDATE userafk SET afk = false,reason = NULL,time = NULL WHERE id = $1 AND guild = $2',message.author.id,message.guild.id)
-					return
+				
+				if afkall and not afk:
+					for record in afkall:
+						user = message.guild.get_member(record['id'])
+						if user.mentioned_in(message) and not message.mention_everyone:
 
-				for record in afkall:
-					user = message.guild.get_member(record['id'])
-					if user.mentioned_in(message) and not message.mention_everyone:
+							time = datetime.now(UTC) - record['time']
+							days = f'{time.days} days' if time.days != 0 else ''
+							time = time.seconds
+							time = time % (24 * 3600)
+							hours = f'{time // 3600} hours' if time // 3600 != 0 else ''
+							time %= 3600
+							minutes = f'{time // 60} minutes' if time // 60 != 0 else ''
+							time %= 60
+							seconds = f'{time} seconds'
 
-						time = datetime.now(UTC) - record['time']
-						days = f'{time.days} days' if time.days != 0 else ''
-						time = time.seconds
-						time = time % (24 * 3600)
-						hours = f'{time // 3600} hours' if time // 3600 != 0 else ''
-						time %= 3600
-						minutes = f'{time // 60} minutes' if time // 60 != 0 else ''
-						time %= 60
-						seconds = f'{time} seconds'
-						
-						embed = discord.Embed(title = 'AFK ping', description = f'*{user.display_name}* is afk for**{days} {hours} {minutes} {seconds}**.\nReason: {record["reason"]}',color = discord.Color.orange())
-						await message.channel.send(embed = embed)
+							embed = discord.Embed(title = 'AFK ping', description = f'*{user.display_name}* is afk for**{days} {hours} {minutes} {seconds}**.\nReason: {record["reason"]}',color = discord.Color.orange())
+							await message.channel.send(embed = embed)
 
 	if bot.user.mentioned_in(message) and not message.mention_everyone:
 		print(message.content)
