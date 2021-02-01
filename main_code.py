@@ -163,11 +163,9 @@ class Utility(commands.Cog):
 				await conn.execute('UPDATE userafk SET afk = true,reason = $1,time = $2 WHERE id = $3 AND guild = $4',args,datetime.now(UTC),ctx.author.id,ctx.guild.id)
 				embed = discord.Embed(title = 'AFK Set', description = f'Your afk has been set: {args}',color = discord.Color.red())
 				embed.set_footer(text='To avoid pings,set your status to DND.',icon_url="https://cdn.discordapp.com/embed/avatars/4.png")
+				await ctx.author.edit(nick=f"😽AFK😽{ctx.author.nick}")
 				await ctx.send(embed = embed)
 								      
-	@afk.error
-	async def afk_err(ctx,error):
-		print(error)
 
 	@commands.command()
 	async def announce(self,ctx,channel:discord.TextChannel,*,args):
