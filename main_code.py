@@ -166,7 +166,7 @@ class Utility(commands.Cog):
 				await ctx.send(embed = embed)
 								      
 	@afk.error
-	async def err(ctx,error):
+	async def afk_err(ctx,error):
 		print(error)
 
 	@commands.command()
