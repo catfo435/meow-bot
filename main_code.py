@@ -254,6 +254,12 @@ class Moderation(commands.Cog):
 	@commands.command()
 	@is_admin()
 	async def purge(self,ctx,amount = None,user:discord.Member = None):
+		'''Clears the given amount of messages.
+			And can mention the user to delete only the specific's user's messages.
+		Example:
+		`-purge 10`
+		`-purge 10 @nub`'''
+		
 		if not amount or not amount.isdigit():
 			embed = discord.Embed(title="Purge Messages",description=":x: Purge Failed",color=discord.Color.red())
 			await ctx.send(embed=embed)
