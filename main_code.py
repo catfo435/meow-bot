@@ -393,6 +393,9 @@ class Fun(commands.Cog):
 		if not arg:
 			await ctx.send(f"{ctx.author.mention}, Type a message for simon to say, duh.")
 			return
+		elif ctx.message.mention_everyone:
+			await ctx.send(f"{ctx.author.mention}, Nope -_- .")
+			return
 		await ctx.send(f"Simon says {arg}")
 
 class EmbedHelpCommand(commands.HelpCommand):
