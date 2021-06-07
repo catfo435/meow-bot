@@ -171,6 +171,11 @@ class Utility(commands.Cog):
 	@commands.command()
 	async def announce(self,ctx,channel:discord.TextChannel,*,args):
 		'''Sends an embed with given text in the given channel'''
+		
+		if not channel:
+			embed = discord.Embed(title='Invalid',description="Input a channel, bruh",color=discord.Color.red())
+			await ctx.send(embed = embed)
+			return
 
 		embed = discord.Embed(title='ANNOUNCEMENT',description=args,color=discord.Color.red())
 		announcement = await channel.send(embed = embed)
@@ -191,7 +196,7 @@ class Utility(commands.Cog):
 		await ctx.send(embed = embed)
 	
 	@commands.command()
-	async def remind(self,ctx,time,*,args=None):
+	async def remind(self,ctx,time = None,*,args=None):
 		'''Use this to remind yourself abt smth
 		   The time argument supports all types of time:
 		   1.1week 10days
@@ -213,7 +218,7 @@ class Utility(commands.Cog):
 		
 		time_seconds = await convert(time)
 
-		if not time_seconds:
+		if not time_seconds or not time:
 			await ctx.send('Invalid Entry')
 			return
 
