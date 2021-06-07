@@ -18,7 +18,10 @@ intents.members = True
 intents.guilds = True
 
 async def get_pre(bot,message):
-	return ";"
+	async with bot.pool.acquire() as conn:
+		async with conn.transaction():
+			prefix = await conn.fetch('SELECT prefix FROM prefix WHERE guild=$1',message.guild.id)
+			return prefix
 
 game = discord.Game('with Cute Cats 😸')
 bot = commands.Bot(command_prefix=get_pre,help_command = None, intents = intents,activity = game)
