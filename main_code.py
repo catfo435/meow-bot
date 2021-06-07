@@ -21,7 +21,7 @@ async def get_pre(bot,message):
 	async with bot.pool.acquire() as conn:
 		async with conn.transaction():
 			prefix = await conn.fetch('SELECT prefix FROM prefix WHERE guild=$1',message.guild.id)
-			return prefix
+			return prefix[0]['prefix']
 
 game = discord.Game('with Cute Cats 😸')
 bot = commands.Bot(command_prefix=get_pre,help_command = None, intents = intents,activity = game)
@@ -140,6 +140,9 @@ class Utility(commands.Cog):
 	@commands.command()
 	async def ping(self,ctx):
 		'''Gives the ping of meow bot'''
+		embed = discord.Embed(title="Ping",description=f"Ping : {round(bot.latency * 1000)} ms",color=ctx.me.color)
+		embed.set_thumbnail(url=bot.user.avatar_url)
+		await ctx.send(embed=embed)
 		await ctx.send(f"Cats don't care about pings actually\nFor the dogs, the ping is *{round(bot.latency * 1000)}* ms")
 
 	@commands.command()
