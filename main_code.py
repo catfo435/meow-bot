@@ -248,7 +248,6 @@ class Utility(commands.Cog):
 				await ctx.send(f'{ctx.author.mention}, prefix is set to {prefix}')
 	@commands.command()
 	@is_admin()
-	@commands.cooldown(1,86400,commands.BucketType.guild)
 	async def purge(self,ctx,amount,user:discord.Member = None):
 		if not amount or not amount.isdigit():
 			embed = discord.Embed(title="Purge Messages",description=":x: Purge Failed",color=discord.Color.red())
