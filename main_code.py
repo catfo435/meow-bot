@@ -111,7 +111,6 @@ async def on_message(message):
 							await message.channel.send(embed = embed)
 
 	if bot.user.mentioned_in(message) and not message.mention_everyone:
-		print(message.content)
 		if 'hello' in message.content.lower():
 			await message.channel.send(f"Hey there! {message.author.mention}")
 
