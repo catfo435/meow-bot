@@ -140,8 +140,7 @@ class Utility(commands.Cog):
 	@commands.command()
 	async def ping(self,ctx):
 		'''Gives the ping of meow bot'''
-		embed = discord.Embed(title="Ping",description=f"Ping : {round(bot.latency * 1000)} ms",color=ctx.me.color)
-		embed.set_thumbnail(url=bot.user.avatar_url)
+		embed = discord.Embed(title="Ping",description=f"`Ping : {round(bot.latency * 1000)} ms`",color=ctx.me.color)
 		await ctx.send(embed=embed)
 
 	@commands.command()
@@ -246,7 +245,25 @@ class Utility(commands.Cog):
 		async with bot.pool.acquire() as conn:
 			async with conn.transaction():
 				await conn.execute('UPDATE prefix SET prefix=$1 WHERE guild=$2',prefix,ctx.guild.id)
-				await ctx.send(f'{ctx.author.mention}, prefix is set to {prefix}')	
+				await ctx.send(f'{ctx.author.mention}, prefix is set to {prefix}')
+	@commands.command()
+	@is_admin()
+	@commands.cooldown(1,86400,commands.BucketType.guild)
+	async def purge(self,ctx,amount,user:discord.Member = None):
+		if not amount or not amount.isdigit():
+			embed = discord.Embed(title="Purge Messages",description=":x: Purge Failed",color=discord.Color.red())
+			await ctx.send(embed=embed)
+		else:
+			def purgecheck(m):
+				if user:
+					return m.author == user
+				else:
+					return True
+			
+			deleted = await ctx.channel.purge(limit = int(amount),check=purgecheck)
+			embed = discord.Embed(title="Purge Messages",color=discord.Color.green())
+			embed.add_field(name=":white_check_mark: Purge Suceeded",value=f"Deleted {len(deleted} messages")
+			await ctx.send(embed=embed)
 
 class Fun(commands.Cog):
 	'''Have fun with these commands'''
