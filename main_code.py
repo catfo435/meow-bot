@@ -262,7 +262,7 @@ class Utility(commands.Cog):
 			
 			deleted = await ctx.channel.purge(limit = int(amount),check=purgecheck)
 			embed = discord.Embed(title="Purge Messages",color=discord.Color.green())
-			embed.add_field(name=":white_check_mark: Purge Suceeded",value=f"Deleted {len(deleted} messages")
+			embed.add_field(name=":white_check_mark: Purge Suceeded",value=f"Deleted {len(deleted)} messages")
 			await ctx.send(embed=embed)
 
 class Fun(commands.Cog):
