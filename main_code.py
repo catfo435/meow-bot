@@ -256,7 +256,9 @@ class Moderation(commands.Cog):
 	async def purge(self,ctx,amount = None,user:discord.Member = None):
 		'''Clears the given amount of messages.
 			And can mention the user to delete only the specific's user's messages.
+			
 		Example:
+		
 		`-purge 10`
 		`-purge 10 @nub`'''
 		
@@ -270,9 +272,10 @@ class Moderation(commands.Cog):
 				else:
 					return True
 			
-			deleted = await ctx.channel.purge(limit = int(amount),check=purgecheck)
+			deleted = await ctx.channel.purge(limit = int(amount)+1,check=purgecheck)
 			embed = discord.Embed(title="Purge Messages",color=discord.Color.green())
-			embed.add_field(name=":white_check_mark: Purge Suceeded",value=f"Deleted {len(deleted)} messages")
+			msg = f"Deleted {len(deleted)-1} messages" if not user else f"Deleted {len(deleted)-1} messages of {user.nick}"
+			embed.add_field(name=":white_check_mark: Purge Suceeded",value=msg)
 			await ctx.send(embed=embed,delete_after=15)
 			
 
