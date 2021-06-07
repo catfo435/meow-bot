@@ -246,9 +246,15 @@ class Utility(commands.Cog):
 			async with conn.transaction():
 				await conn.execute('UPDATE prefix SET prefix=$1 WHERE guild=$2',prefix,ctx.guild.id)
 				await ctx.send(f'{ctx.author.mention}, prefix is set to {prefix}')
+				
+
+class Moderation(commands.Cog):
+	'''THE Mod COMMANDS OF THIS BOT'''
+	
+	
 	@commands.command()
 	@is_admin()
-	async def purge(self,ctx,amount,user:discord.Member = None):
+	async def purge(self,ctx,amount = None,user:discord.Member = None):
 		if not amount or not amount.isdigit():
 			embed = discord.Embed(title="Purge Messages",description=":x: Purge Failed",color=discord.Color.red())
 			await ctx.send(embed=embed)
@@ -262,7 +268,8 @@ class Utility(commands.Cog):
 			deleted = await ctx.channel.purge(limit = int(amount),check=purgecheck)
 			embed = discord.Embed(title="Purge Messages",color=discord.Color.green())
 			embed.add_field(name=":white_check_mark: Purge Suceeded",value=f"Deleted {len(deleted)} messages")
-			await ctx.send(embed=embed)
+			await ctx.send(embed=embed,delete_after=15)
+			
 
 class Fun(commands.Cog):
 	'''Have fun with these commands'''
@@ -386,7 +393,7 @@ class Fun(commands.Cog):
 class EmbedHelpCommand(commands.HelpCommand):
 
 	COLOUR = discord.Colour.orange()
-	emoji_ref = {'Utility':':tools:','Fun':':partying_face:','Help':':speech_balloon:'}
+	emoji_ref = {'Utility':':tools:','Fun':':partying_face:','Help':':speech_balloon:','Moderation':':rotating_light:'}
 	version = os.getenv('VERSION')
 
 	def get_ending_note(self,mode = 0):
