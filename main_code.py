@@ -171,13 +171,6 @@ class Utility(commands.Cog):
 	@commands.command()
 	async def announce(self,ctx,channel:discord.TextChannel,*,args):
 		'''Sends an embed with given text in the given channel'''
-		
-		print(type(channel))
-		
-		if not type(channel) == discord.TextChannel:
-			embed = discord.Embed(title='Invalid',description="Input a channel, bruh",color=discord.Color.red())
-			await ctx.send(embed = embed)
-			return
 
 		embed = discord.Embed(title='ANNOUNCEMENT',description=args,color=discord.Color.red())
 		announcement = await channel.send(embed = embed)
