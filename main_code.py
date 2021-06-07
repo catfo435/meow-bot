@@ -54,7 +54,7 @@ async def on_member_remove(member:discord.Member):
 async def on_guild_join(guild:discord.Guild):
 	async with bot.pool.acquire() as conn:
 		async with conn.transaction():
-			await conn.execute('INSERT INTO prefix(guild) VALUES($1)',guild.id)
+			await conn.execute('INSERT INTO prefix(guild,prefix) VALUES($1,$2)',guild.id,";")
 
 @bot.event
 async def on_guild_remove(guild:discord.Guild):
@@ -143,7 +143,6 @@ class Utility(commands.Cog):
 		embed = discord.Embed(title="Ping",description=f"Ping : {round(bot.latency * 1000)} ms",color=ctx.me.color)
 		embed.set_thumbnail(url=bot.user.avatar_url)
 		await ctx.send(embed=embed)
-		await ctx.send(f"Cats don't care about pings actually\nFor the dogs, the ping is *{round(bot.latency * 1000)}* ms")
 
 	@commands.command()
 	async def afk(self,ctx,*,args = None):
