@@ -276,7 +276,7 @@ class Moderation(commands.Cog):
 			embed = discord.Embed(title="Purge Messages",color=discord.Color.green())
 			msg = f"Deleted {len(deleted)-1} messages" if not user else f"Deleted {len(deleted)-1} messages of {user.nick}"
 			embed.add_field(name=":white_check_mark: Purge Suceeded",value=msg)
-			await ctx.send(embed=embed,delete_after=15)
+			await ctx.send(embed=embed,delete_after=5)
 			
 
 class Fun(commands.Cog):
