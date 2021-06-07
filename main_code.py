@@ -487,6 +487,7 @@ class Help(commands.Cog):
 bot.add_cog(Utility())
 bot.add_cog(Fun())
 bot.add_cog(Help(bot))
+bot.add_cog(Moderation())
 
 cntxt = ssl.create_default_context(cafile='rds-ca-2019-root.pem')
 cntxt.check_hostname = False
