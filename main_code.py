@@ -21,7 +21,11 @@ async def get_pre(bot,message):
 	async with bot.pool.acquire() as conn:
 		async with conn.transaction():
 			prefix = await conn.fetch('SELECT prefix FROM prefix WHERE guild=$1',message.guild.id)
-			return prefix[0]['prefix']
+			try:
+				return prefix[0]['prefix']
+			except IndexError:
+				await conn.execute('INSERT INTO prefix(guild,prefix) VALUES($1,$2)',message.guild.id,";")
+				return ";"
 
 game = discord.Game('with Cute Cats 😸')
 bot = commands.Bot(command_prefix=get_pre,help_command = None, intents = intents,activity = game)
