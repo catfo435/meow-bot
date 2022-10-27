@@ -252,7 +252,7 @@ class Utility(commands.Cog):
 	
 	@commands.command()
 	@commands.is_owner()
-	async def reset_cooldown(self,ctx:Context):
+	async def reset_cooldown(self,ctx):
 		ctx.command.reset_cooldown(ctx)
 		return 
 
