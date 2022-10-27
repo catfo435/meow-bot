@@ -249,6 +249,13 @@ class Utility(commands.Cog):
 			async with conn.transaction():
 				await conn.execute('UPDATE prefix SET prefix=$1 WHERE guild=$2',prefix,ctx.guild.id)
 				await ctx.send(f'{ctx.author.mention}, prefix is set to {prefix}')
+	
+	@commands.command()
+	@commands.is_owner()
+	async def reset_cooldown(self,ctx:Context):
+		ctx.command.reset_cooldown(ctx)
+		return 
+
 				
 
 class Moderation(commands.Cog):
