@@ -30,7 +30,7 @@ async def get_pre(bot,message):
 game = discord.Game('with Cute Cats 😸')
 bot = commands.Bot(command_prefix=get_pre,help_command = None, intents = intents,activity = game)
 
-TOKEN = 'NzcyNDE0NDg2MTMyMDMxNDg5.X56VDA.F3VBV5qfKohHzL22gOIJeo2CSW0'
+TOKEN = os.environ['TOKEN']
 UTC = pytz.utc
 IST = pytz.timezone('Asia/Calcutta')
 
